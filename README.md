@@ -11,6 +11,8 @@ fly.
 The whole thing is a single self-contained `index.html` (no build step, no
 dependencies). Just open it in a browser.
 
+**Live demo: [inhahe.com/mod257](https://inhahe.com/mod257/)**
+
 ![RSA xor — a captured view from the explorer](rsa_xor_1783838752348.png)
 
 ## The algorithm
