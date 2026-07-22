@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
 <title>RSA xor &mdash; infinite explorer</title>
 <style>
   :root{
@@ -18,44 +18,81 @@
   .panel{position:fixed;background:var(--hud-bg);backdrop-filter:blur(6px);
     border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;
     font-size:12px;line-height:1.55;user-select:none;box-shadow:0 6px 24px rgba(0,0,0,0.45);}
-  #hud{top:12px;left:12px;min-width:230px;}
+  /* Top-left column: live HUD stacked above the algorithm formula. */
+  #topleft{position:fixed;top:12px;left:12px;display:flex;flex-direction:column;
+    gap:8px;align-items:flex-start;max-width:calc(100vw - 24px);}
+  #topleft > .panel{position:static;}
+  #hud{min-width:230px;}
   #hud b{color:var(--accent);font-weight:600;}
   #hud .k{color:var(--hud-dim);}
   #hud .row{display:flex;justify-content:space-between;gap:16px;}
-  #help{bottom:12px;left:12px;max-width:340px;color:var(--hud-dim);font-size:11.5px;transition:opacity .25s;}
+  #algo{max-width:100%;overflow-x:auto;}
+  #algo .f{white-space:nowrap;font-size:12.5px;color:var(--hud-fg);}
+  #algo .f .lbl{color:var(--hud-dim);font-weight:600;margin-right:2px;}
+  #algo .f i{font-style:normal;color:var(--accent);}
+  #algo sup{font-size:9px;}
+  #help{max-width:340px;color:var(--hud-dim);font-size:11.5px;transition:opacity .25s;}
   #help b{color:var(--hud-fg);}
   #help .kbd{display:inline-block;min-width:16px;text-align:center;padding:1px 5px;margin:0 1px;
     background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:5px;
     color:var(--hud-fg);font-size:11px;}
   #toast{top:12px;left:50%;transform:translateX(-50%);opacity:0;transition:opacity .2s;
     pointer-events:none;padding:6px 14px;}
+  /* On-screen controls for touch / keyboard-less devices (hidden on desktop). */
+  #touchbar{left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);
+    display:none;flex-wrap:wrap;justify-content:center;gap:6px;max-width:calc(100vw - 20px);padding:8px;}
+  #touchbar button{min-width:44px;height:42px;padding:0 10px;color:var(--hud-fg);
+    background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);border-radius:9px;
+    font-family:inherit;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  #touchbar button:active{background:var(--accent);color:#0b1017;border-color:var(--accent);}
+  #touchbar button.on{background:var(--accent);color:#0b1017;border-color:var(--accent);}
+  @media (pointer:coarse), (max-width:760px){
+    #touchbar{display:flex;}
+    #help{display:none;}
+    #algo .f{font-size:11px;}
+  }
   .hidden{display:none;}
 </style>
 </head>
 <body>
 <canvas id="view"></canvas>
 
-<div id="hud" class="panel">
-  <div class="row"><span class="k">center</span><span><b id="ccx">0</b>, <b id="ccy">0</b></span></div>
-  <div class="row"><span class="k">cursor</span><span id="curxy">&mdash;</span></div>
-  <div class="row"><span class="k">value</span><span id="curval">&mdash;</span></div>
-  <div class="row"><span class="k">zoom</span><span id="zoomlbl">1&times;</span></div>
-  <div class="row"><span class="k">mode</span><span id="modelbl">authentic</span></div>
+<div id="topleft">
+  <div id="hud" class="panel">
+    <div class="row"><span class="k">center</span><span><b id="ccx">0</b>, <b id="ccy">0</b></span></div>
+    <div class="row"><span class="k">cursor</span><span id="curxy">&mdash;</span></div>
+    <div class="row"><span class="k">value</span><span id="curval">&mdash;</span></div>
+    <div class="row"><span class="k">zoom</span><span id="zoomlbl">1&times;</span></div>
+    <div class="row"><span class="k">mode</span><span id="modelbl">authentic</span></div>
+  </div>
+  <div id="help" class="panel">
+    <b>RSA&nbsp;xor</b><br>
+    <span class="kbd">drag</span> pan &nbsp; <span class="kbd">wheel</span> zoom &nbsp;
+    <span class="kbd">&larr;&uarr;&rarr;&darr;</span> pan<br>
+    <span class="kbd">+</span>/<span class="kbd">&minus;</span> zoom &nbsp;
+    <span class="kbd">0</span> reset &nbsp;
+    <span class="kbd">a</span> authentic/clean &nbsp;
+    <span class="kbd">c</span> color &nbsp;
+    <span class="kbd">g</span> goto &nbsp;
+    <span class="kbd">s</span> save PNG &nbsp;
+    <span style="white-space:nowrap"><span class="kbd">h</span> hide/show all panels</span>
+  </div>
+  <div id="algo" class="panel" title="How each pixel is computed from its (x, y) coordinate">
+    <span class="f"><span class="lbl">Formula:</span> gray(<i>x</i>,&thinsp;<i>y</i>) = ( (|x+y| xor |x&minus;y|)<sup>7</sup> ) mod 257</span>
+  </div>
 </div>
 
 <div id="toast" class="panel"></div>
 
-<div id="help" class="panel">
-  <b>RSA&nbsp;xor</b> &nbsp;<span style="color:var(--hud-dim)">pixel = (( |x+y| xor |x&minus;y| )<sup>7</sup>) mod 257</span><br>
-  <span class="kbd">drag</span> pan &nbsp; <span class="kbd">wheel</span> zoom &nbsp;
-  <span class="kbd">&larr;&uarr;&rarr;&darr;</span> pan<br>
-  <span class="kbd">+</span>/<span class="kbd">&minus;</span> zoom &nbsp;
-  <span class="kbd">0</span> reset &nbsp;
-  <span class="kbd">a</span> authentic/clean &nbsp;
-  <span class="kbd">c</span> color &nbsp;
-  <span class="kbd">g</span> goto &nbsp;
-  <span class="kbd">s</span> save PNG &nbsp;
-  <span style="white-space:nowrap"><span class="kbd">h</span> hide/show this panel</span>
+<div id="touchbar" class="panel">
+  <button data-act="zin" aria-label="Zoom in">+</button>
+  <button data-act="zout" aria-label="Zoom out">&minus;</button>
+  <button data-act="reset" aria-label="Reset view">reset</button>
+  <button data-act="color" aria-label="Toggle color">color</button>
+  <button data-act="mode" aria-label="Toggle authentic/clean">mode</button>
+  <button data-act="goto" aria-label="Go to coordinate">goto</button>
+  <button data-act="save" aria-label="Save PNG">save</button>
+  <button data-act="hud" class="on" aria-pressed="true" aria-label="Show or hide the readout and formula panels" title="Show/hide the readout &amp; formula panels">info</button>
 </div>
 
 <script>
@@ -246,16 +283,54 @@ function toast(msg){
 }
 
 // ---- interaction ----------------------------------------------------------
+// Pointer Events unify mouse + touch. One pointer = drag-pan; two pointers =
+// pinch-to-zoom (about the finger midpoint) plus two-finger pan.
+const pointers = new Map();        // pointerId -> {x, y} in CSS px
 let dragging = false, lastX = 0, lastY = 0, moved = false;
+let lastMid = null;                // last two-finger midpoint (CSS px)
+let pinchDist = 0;                 // finger spread that maps to the current zoom level
+const PINCH_RATIO = 1.28;          // spread factor required per discrete zoom step
+
+function firstTwoPointers(){
+  const it = pointers.values();
+  return [it.next().value, it.next().value];
+}
 
 canvas.addEventListener('pointerdown', (e) => {
-  dragging = true; moved = false;
-  lastX = e.clientX; lastY = e.clientY;
-  canvas.classList.add('drag');
   canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 1){
+    dragging = true; moved = false;
+    lastX = e.clientX; lastY = e.clientY;
+    canvas.classList.add('drag');
+  } else if (pointers.size === 2){
+    dragging = false;              // hand single-finger pan off to pinch
+    const [a, b] = firstTwoPointers();
+    pinchDist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+    lastMid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  }
 });
 canvas.addEventListener('pointermove', (e) => {
   lastMouse = { x: e.clientX * DPR, y: e.clientY * DPR };
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (pointers.size >= 2){
+    const [a, b] = firstTwoPointers();
+    const midX = (a.x + b.x) / 2, midY = (a.y + b.y) / 2;
+    const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+    if (lastMid){                  // two-finger pan
+      const wpp = worldPerPx();
+      fox -= (midX - lastMid.x) * DPR * wpp;
+      foy -= (midY - lastMid.y) * DPR * wpp;
+    }
+    lastMid = { x: midX, y: midY };
+    const px = midX * DPR, py = midY * DPR;   // pinch zoom about the midpoint
+    while (dist / pinchDist >= PINCH_RATIO){ zoomAt(px, py, 1);  pinchDist *= PINCH_RATIO; }
+    while (pinchDist / dist >= PINCH_RATIO){ zoomAt(px, py, -1); pinchDist /= PINCH_RATIO; }
+    moved = true; dirty = true;
+    return;
+  }
+
   if (dragging){
     const dx = (e.clientX - lastX) * DPR;
     const dy = (e.clientY - lastY) * DPR;
@@ -269,14 +344,22 @@ canvas.addEventListener('pointermove', (e) => {
     dirty = true; // refresh cursor readout
   }
 });
-function endDrag(e){
-  dragging = false;
-  canvas.classList.remove('drag');
+function endPointer(e){
+  if (pointers.has(e.pointerId)) pointers.delete(e.pointerId);
   if (e && e.pointerId != null){ try{ canvas.releasePointerCapture(e.pointerId); }catch(_){} }
+  if (pointers.size < 2) lastMid = null;
+  if (pointers.size === 1){
+    // resume single-finger pan seamlessly with the remaining finger
+    const [p] = pointers.values();
+    dragging = true; lastX = p.x; lastY = p.y;
+  } else if (pointers.size === 0){
+    dragging = false;
+    canvas.classList.remove('drag');
+  }
 }
-canvas.addEventListener('pointerup', endDrag);
-canvas.addEventListener('pointercancel', endDrag);
-canvas.addEventListener('pointerleave', () => { if (!dragging){ lastMouse = null; dirty = true; } });
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+canvas.addEventListener('pointerleave', () => { if (pointers.size === 0 && !dragging){ lastMouse = null; dirty = true; } });
 
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
@@ -298,6 +381,23 @@ function zoomAt(mx, my, dir){
   dirty = true;
 }
 
+// ---- actions (shared by keyboard + on-screen touch buttons) ---------------
+function zoomStep(dir){ zoomAt(W / 2, H / 2, dir); }
+function resetView(){ zl = 0; applyZoom(); centerOn(0, 0); toast('reset to origin'); }
+function toggleColor(){ colorMode = !colorMode; dirty = true; toast(colorMode ? 'color' : 'grayscale'); }
+function toggleMode(){ authentic = !authentic; dirty = true;
+  toast(authentic ? 'authentic (original, float grain)' : 'clean (exact modular)'); }
+function toggleHud(){
+  hudHidden = !hudHidden;
+  // Keep the toast and the touch control bar visible regardless.
+  document.querySelectorAll('.panel').forEach(p => {
+    if (p.id !== 'toast' && p.id !== 'touchbar') p.classList.toggle('hidden', hudHidden);
+  });
+  const infoBtn = document.querySelector('#touchbar [data-act="hud"]');
+  if (infoBtn){ infoBtn.classList.toggle('on', !hudHidden); infoBtn.setAttribute('aria-pressed', String(!hudHidden)); }
+  toast(hudHidden ? 'info panels hidden \u2014 press h or tap info to show' : 'info panels shown');
+}
+
 // keyboard
 window.addEventListener('keydown', (e) => {
   if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
@@ -308,20 +408,31 @@ window.addEventListener('keydown', (e) => {
     case 'ArrowRight': fox += panPx * wpp; dirty = true; e.preventDefault(); break;
     case 'ArrowUp':    foy -= panPx * wpp; dirty = true; e.preventDefault(); break;
     case 'ArrowDown':  foy += panPx * wpp; dirty = true; e.preventDefault(); break;
-    case '+': case '=': zoomAt(W/2, H/2, 1); break;
-    case '-': case '_': zoomAt(W/2, H/2, -1); break;
-    case '0': zl = 0; applyZoom(); centerOn(0, 0); toast('reset to origin'); break;
-    case 'c': case 'C': colorMode = !colorMode; dirty = true; toast(colorMode ? 'color' : 'grayscale'); break;
-    case 'a': case 'A': authentic = !authentic; dirty = true;
-      toast(authentic ? 'authentic (original, float grain)' : 'clean (exact modular)'); break;
+    case '+': case '=': zoomStep(1); break;
+    case '-': case '_': zoomStep(-1); break;
+    case '0': resetView(); break;
+    case 'c': case 'C': toggleColor(); break;
+    case 'a': case 'A': toggleMode(); break;
     case 's': case 'S': savePng(); break;
     case 'g': case 'G': gotoPrompt(); break;
-    case 'h': case 'H':
-      hudHidden = !hudHidden;
-      document.querySelectorAll('.panel').forEach(p => { if (p.id !== 'toast') p.classList.toggle('hidden', hudHidden); });
-      toast(hudHidden ? 'HUD hidden \u2014 press h to show' : 'HUD shown');
-      break;
+    case 'h': case 'H': toggleHud(); break;
   }
+});
+
+// on-screen touch controls
+const touchActions = {
+  zin:   () => zoomStep(1),
+  zout:  () => zoomStep(-1),
+  reset: resetView,
+  color: toggleColor,
+  mode:  toggleMode,
+  goto:  gotoPrompt,
+  save:  savePng,
+  hud:   toggleHud,
+};
+document.getElementById('touchbar').addEventListener('click', (e) => {
+  const btn = e.target.closest('button'); if (!btn) return;
+  const fn = touchActions[btn.dataset.act]; if (fn) fn();
 });
 
 function gotoPrompt(){

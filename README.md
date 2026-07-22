@@ -8,7 +8,7 @@ pixel is computed directly from its integer coordinates, so the plane is unbound
 you can scroll and zoom in any direction forever, and every cell is generated on the
 fly.
 
-The whole thing is a single self-contained `index.html` (no build step, no
+The whole thing is a single self-contained `mod257.html` (no build step, no
 dependencies). Just open it in a browser.
 
 **Live demo: [inhahe.com/mod257](https://inhahe.com/mod257/)**
@@ -31,8 +31,8 @@ grayscale or color palette.
 
 Press **`a`** to toggle between them:
 
-- **authentic** (default) — reproduces the *original* `RSA_xor.png`. mccann computed
-  `temp^7` in floating point and then reduced `mod 257`
+- **authentic** (default) — reproduces mccann's *original* image (linked above).
+  mccann computed `temp^7` in floating point and then reduced `mod 257`
   (`fmod(pow(temp, 7), 257)`), not exact modular arithmetic. For `temp` larger than
   ~190, `temp^7` exceeds a double's 53-bit mantissa, so the low bits are lost — and
   that rounding is exactly what produces the extra grain/texture that makes the image
@@ -60,26 +60,41 @@ and lo halves mod 257 — no BigInt needed.
 | **`c`** | toggle color / grayscale |
 | **`g`** | goto — jump to an entered `x, y` center coordinate |
 | **`s`** | save the current view as a PNG |
-| **`h`** | hide / show the HUD panels |
+| **`h`** | hide / show all overlay panels |
 
 Zoom ranges from `1/16777216×` (very far out, one screen sample covers many cells) to
 `41×` (each cell drawn as a large block of screen pixels).
 
 ## HUD
 
-The top-left panel shows live readouts: the **center** world coordinate, the **cursor**
-world coordinate and its computed cell **value**, the current **zoom**, and the active
-**mode**. The bottom-left panel is the keyboard legend. Press **`h`** to hide both; a
-toast confirms how to bring them back.
+All overlays live in a single top-left column, stacked in this order:
+
+1. **Live readout** — the **center** world coordinate, the **cursor** world coordinate
+   and its computed cell **value**, the current **zoom**, and the active **mode**.
+2. **Keyboard legend** — the list of shortcuts.
+3. **Formula** — a one-line label showing how each pixel is derived from its `(x, y)`
+   coordinate: `Formula: gray(x, y) = ( (|x+y| xor |x−y|)^7 ) mod 257`.
+
+Press **`h`** to collapse/expand all three panels at once; a toast confirms how to
+bring them back.
+
+### Touch / mobile
+
+On touch or narrow (≤760px) devices the keyboard legend is replaced by an on-screen
+**control bar** along the bottom (zoom, reset, color, mode, goto, save, and an **info**
+toggle). The live-readout and formula panels stay in the top-left, and the touch bar's
+**info** button shows/hides exactly those two top panels (the legend is already hidden
+on mobile) — so the formula stays visible on mobile and can be toggled from the bottom
+bar.
 
 ## Files
 
-- `index.html` — the entire application (algorithm, rendering, UI).
-- `RSA_xor.png` — mccann's original reference image the "authentic" mode reproduces.
-- `rsa_xor_1783838638436.png` — a high-resolution view captured from the explorer.
+- `mod257.html` — the entire application (algorithm, rendering, UI).
+- `rsa_xor_1783838638436.png`, `rsa_xor_1783838752348.png` — views captured from the
+  explorer via the save-PNG feature.
 - `todo.txt` — the original project brief / algorithm description.
 
 ## Running
 
-No server or build required — open `index.html` in any modern browser. (Serving the
+No server or build required — open `mod257.html` in any modern browser. (Serving the
 folder over a local HTTP server also works if you prefer.)
