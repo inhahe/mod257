@@ -31,6 +31,10 @@
   #algo .f .lbl{color:var(--hud-dim);font-weight:600;margin-right:2px;}
   #algo .f i{font-style:normal;color:var(--accent);}
   #algo sup{font-size:9px;}
+  #algo .attrib{margin-top:3px;font-size:10.5px;color:var(--hud-dim);
+    white-space:normal;overflow-wrap:anywhere;position:sticky;left:0;}
+  #algo .attrib a{color:var(--accent);text-decoration:none;}
+  #algo .attrib a:hover{text-decoration:underline;}
   #help{max-width:340px;color:var(--hud-dim);font-size:11.5px;transition:opacity .25s;}
   #help b{color:var(--hud-fg);}
   #help .kbd{display:inline-block;min-width:16px;text-align:center;padding:1px 5px;margin:0 1px;
@@ -78,7 +82,8 @@
     <span style="white-space:nowrap"><span class="kbd">h</span> hide/show all panels</span>
   </div>
   <div id="algo" class="panel" title="How each pixel is computed from its (x, y) coordinate">
-    <span class="f"><span class="lbl">Formula:</span> gray(<i>x</i>,&thinsp;<i>y</i>) = ( (|x+y| xor |x&minus;y|)<sup>7</sup> ) mod 257</span>
+    <div class="f"><span class="lbl">Formula:</span> gray(<i>x</i>,&thinsp;<i>y</i>) = ( (|x+y| xor |x&minus;y|)<sup>7</sup> ) mod 257</div>
+    <div class="attrib">attrib. <a href="https://www.deviantart.com/mccann/art/RSA-xor-153857" target="_blank" rel="noopener">deviantart.com/mccann/art/RSA-xor-153857</a></div>
   </div>
 </div>
 
