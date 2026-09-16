@@ -98,3 +98,9 @@ bar.
 
 No server or build required — open `mod257.html` in any modern browser. (Serving the
 folder over a local HTTP server also works if you prefer.)
+
+
+## License
+
+MIT - see [LICENSE](LICENSE). Free to use, modify and redistribute; provided
+as-is, with no warranty.
