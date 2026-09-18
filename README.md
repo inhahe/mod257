@@ -72,8 +72,9 @@ All overlays live in a single top-left column, stacked in this order:
 1. **Live readout** — the **center** world coordinate, the **cursor** world coordinate
    and its computed cell **value**, the current **zoom**, and the active **mode**.
 2. **Keyboard legend** — the list of shortcuts.
-3. **Formula** — a one-line label showing how each pixel is derived from its `(x, y)`
-   coordinate: `Formula: gray(x, y) = ( (|x+y| xor |x−y|)^7 ) mod 257`.
+3. **Formula** — a label showing how each pixel is derived from its `(x, y)`
+   coordinate (`Formula: gray(x, y) = ( (|x+y| xor |x−y|)^7 ) mod 257`), plus an
+   `attrib.` line linking to mccann's original DeviantArt page.
 
 Press **`h`** to collapse/expand all three panels at once; a toast confirms how to
 bring them back.
