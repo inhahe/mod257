@@ -11,7 +11,7 @@ fly.
 The whole thing is a single self-contained `mod257.html` (no build step, no
 dependencies). Just open it in a browser.
 
-**Live demo: [inhahe.com/mod257](https://inhahe.com/mod257/)**
+**Live demo: [inhahe.github.io/mod257](https://inhahe.github.io/mod257/mod257.html)**
 
 ![RSA xor — a captured view from the explorer](rsa_xor_1783838752348.png)
 
